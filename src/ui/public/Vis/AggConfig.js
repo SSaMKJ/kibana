@@ -272,6 +272,17 @@ define(function (require) {
       return this.params.field;
     };
 
+      /***
+       * ssamkj - start
+       * */
+
+      AggConfig.prototype.getFormat = function () {
+         return this.type && this.type.getFormat(this);
+      };
+
+      /***
+       * ssamkj - the end
+       * */
     AggConfig.prototype.fieldFormatter = function (contentType, defaultFormat) {
       var format = this.type && this.type.getFormat(this);
       if (format) return format.getConverterFor(contentType);

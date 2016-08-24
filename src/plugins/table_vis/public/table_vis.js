@@ -37,6 +37,8 @@ define(function (require) {
           perPage: 10,
           showPartialRows: false,
           showMeticsAtAllLevels: false
+          , showSummary:false // ssamkj
+          , flexibleDateFormat:false // ssamkj
         },
         editor: '<table-vis-params></table-vis-params>'
       },

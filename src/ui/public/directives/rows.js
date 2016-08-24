@@ -9,7 +9,8 @@ define(function (require) {
     return {
       restrict: 'A',
       link: function ($scope, $el, attr) {
-        function addCell($tr, contents) {
+
+          function addCell($tr, contents) {
           var $cell = $(document.createElement('td'));
 
           // TODO: It would be better to actually check the type of the field, but we don't have
@@ -30,8 +31,60 @@ define(function (require) {
             return $compile($cell)($cell.scope);
           };
 
+              /***
+               * ssamkj - start
+               * */
+
+              function getInterval(contents){
+                  try{
+                      var interval = contents.aggConfig._opts.params.interval;
+                      return interval;
+                  }catch(e){
+                      return null;
+                  }
+              }
+
+              function isFlexibleDateFormat(contents){
+                  return contents.aggConfig && contents.aggConfig.vis && contents.aggConfig.vis.params && contents.aggConfig.vis.params.flexibleDateFormat;
+              }
+
+
+              function setDateFormat(contents){
+                  var flexibleDateFormat = isFlexibleDateFormat(contents);
+
+                  var dateType = contents.aggConfig.getFormat();
+                  if(flexibleDateFormat){
+                      var interval = getInterval(contents);
+                      if(interval){
+                          switch(interval){
+                              case 's': dateType._params.pattern = 'YYYY-MM-DD HH:mm:ss';
+                                  break;
+                              case 'm': dateType._params.pattern = 'YYYY-MM-DD HH:mm';
+                                  break;
+                              case 'h': dateType._params.pattern = 'YYYY-MM-DD HH';
+                                  break;
+                              case 'd': dateType._params.pattern = 'YYYY-MM-DD';
+                                  break;
+                              case 'M': dateType._params.pattern = 'YYYY-MM';
+                                  break;
+                              case 'y': dateType._params.pattern = 'YYYY';
+                                  break;
+                              default : dateType._params.pattern = dateType.type.paramDefaults.pattern;
+                                  break;
+                          }
+                      }
+                  }else{
+                      dateType._params.pattern = dateType.type.paramDefaults.pattern;
+                  }
+              }
+              /***
+               * ssamkj - the end
+               * */
           if (contents instanceof AggConfigResult) {
             if (contents.type === 'bucket' && contents.aggConfig.field() && contents.aggConfig.field().filterable) {
+
+                setDateFormat(contents);
+
               $cell = createAggConfigResultCell(contents);
             }
             contents = contents.toString('html');
@@ -95,6 +148,51 @@ define(function (require) {
               addCell($tr, cell);
             });
           });
+
+          /***
+           * ssamkj - start
+           * */
+
+
+          function hasParameterInVis ($scope, paramName){
+            if(!$scope.vis && $scope.$parent) return hasParameterInVis($scope.$parent, paramName)
+            if($scope.vis.params[paramName]=== undefined) return hasParameterInVis($scope.$parent, paramName)
+            return $scope.vis.params[paramName];
+          }
+
+          var list = $scope.list;
+          if(_.isArray(list) && hasParameterInVis($scope, 'showSummary')){
+
+            var sumRow = [];
+
+            list.forEach(function(row){
+              var index = 0;
+              row.forEach(function(cell){
+                if(sumRow[index]===undefined){
+                  if(cell.type === 'metric' && _.isNumeric(cell.value)){
+                    sumRow[index] = new AggConfigResult(cell.aggConfig, null, 0, 0);
+                  }else{
+                    sumRow[index] = index===0?'합계':'-';
+                  }
+                }
+                if(cell.type === 'metric' && _.isNumeric(cell.value)){
+                  var tmp = sumRow[index];
+                  sumRow[index].key = tmp.key +cell.key;
+                  sumRow[index].value = tmp.value +cell.value;
+                }
+                index++;
+              })
+            });
+
+            var $tr = $(document.createElement('tr')).appendTo($el);
+            sumRow.forEach(function (cell) {
+              addCell($tr, cell);
+            });
+          }
+
+          /***
+           * ssamkj - the end
+           * */
         });
       }
     };

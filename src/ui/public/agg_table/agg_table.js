@@ -33,7 +33,7 @@ define(function (require) {
         };
 
         self.exportAsCsv = function (formatted) {
-          var csv = new Blob([self.toCsv(formatted)], { type: 'text/plain' });
+          var csv = new Blob([self.toCsv(formatted)], { type: 'text/csv;charset=utf-8,%EF%BB%BF'});
           self._saveAs(csv, self.csv.filename);
         };
 
